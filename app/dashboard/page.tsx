@@ -2,9 +2,13 @@
 
 import { useAccount } from 'wagmi'
 import { redirect } from 'next/navigation'
+import { useMyDebts } from '@/lib/hooks/useDebts'
+import { DebtCard } from '@/components/DebtCard'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount()
+  const { debtIds, isLoading } = useMyDebts()
 
   if (!isConnected) {
     redirect('/')
@@ -13,39 +17,56 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <Link 
+            href="/split-bill"
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+          >
+            + New Bill Split
+          </Link>
+        </div>
         
-        {/* Balance Section */}
+        {/* Connected Address */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Your Balance</h2>
-          <div className="space-y-2">
-            <p className="text-gray-600">Connected: {address}</p>
-            <div className="text-2xl font-bold text-red-600">
-              You Owe: -$47.50
-            </div>
-            <div className="text-2xl font-bold text-green-600">
-              Owed to You: +$7.00
-            </div>
-          </div>
+          <h2 className="text-xl font-semibold mb-4">Your Account</h2>
+          <p className="text-sm text-gray-600">
+            {address}
+          </p>
         </div>
 
         {/* Debts List */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Your Debts</h2>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span>Owe Alex</span>
-              <span className="font-semibold text-red-600">$23.50</span>
+          <h2 className="text-xl font-semibold mb-4">Your Transactions</h2>
+          
+          {isLoading ? (
+            <div className="space-y-3">
+              <div className="h-12 bg-gray-100 rounded animate-pulse"></div>
+              <div className="h-12 bg-gray-100 rounded animate-pulse"></div>
+              <div className="h-12 bg-gray-100 rounded animate-pulse"></div>
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span>Owe Sarah</span>
-              <span className="font-semibold text-red-600">$31.00</span>
+          ) : debtIds && debtIds.length > 0 ? (
+            <div className="space-y-3">
+              {debtIds.map((debtId) => (
+                <DebtCard 
+                  key={debtId.toString()} 
+                  debtId={debtId}
+                  userAddress={address!}
+                />
+              ))}
             </div>
-            <div className="flex justify-between items-center p-3 bg-gray-50 rounded">
-              <span>Tom owes you</span>
-              <span className="font-semibold text-green-600">$7.00</span>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <p className="text-lg mb-4">No debts yet!</p>
+              <p className="mb-6">Split your first bill to get started</p>
+              <Link 
+                href="/split-bill"
+                className="inline-block bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
+              >
+                Split a Bill
+              </Link>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

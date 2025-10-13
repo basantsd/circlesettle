@@ -32,6 +32,14 @@ export function Header() {
               >
                 Split Bill
               </Link>
+              {process.env.NODE_ENV === 'development' && (
+                <Link 
+                    href="/debug" 
+                    className="text-red-500 hover:text-red-500 font-medium"
+                >
+                    Debug
+                </Link>
+                )}
             </nav>
           )}
 
