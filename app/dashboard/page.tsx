@@ -17,30 +17,33 @@ export default function DashboardPage() {
     redirect('/')
   }
 
-  // Auto-refresh every 10 seconds
+  // auto-refresh debts
   useEffect(() => {
-    const interval = setInterval(() => {
-      refetch()
-    }, 10000)
-    
+    const interval = setInterval(() => refetch(), 10000)
     return () => clearInterval(interval)
   }, [refetch])
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
-        {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <Link 
-            href="/split-bill"
-            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            + New Bill Split
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href="/split-bill"
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+            >
+              + Manual Split
+            </Link>
+            <Link
+              href="/split-bill-ai"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg hover:from-purple-700 hover:to-blue-700 transition flex items-center space-x-2"
+            >
+              <span>🤖 AI Scanner</span>
+            </Link>
+          </div>
         </div>
 
-        {/* Account Info */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Your Account</h2>
           <div className="flex items-center justify-between">
@@ -58,10 +61,8 @@ export default function DashboardPage() {
 
         <CrossChainBanner />
 
-        {/* Balance Summary */}
         <BalanceSummary debtIds={debtIds} userAddress={address!} isLoading={isLoading} />
 
-        {/* Transactions List */}
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">Your Transactions</h2>
@@ -103,7 +104,6 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Debug Link */}
         <div className="mt-6 text-center">
           <Link 
             href="/debug" 
@@ -117,7 +117,6 @@ export default function DashboardPage() {
   )
 }
 
-// Balance Summary Component
 function BalanceSummary({ 
   debtIds, 
   userAddress, 
@@ -152,7 +151,6 @@ function BalanceSummary({
   )
 }
 
-// Summary Card for each type
 function DebtSummaryCard({ 
   debtIds, 
   userAddress, 
@@ -162,7 +160,6 @@ function DebtSummaryCard({
   userAddress: string
   type: 'owed' | 'owing' | 'net'
 }) {
-  // Fetch all debts
   const debts = debtIds.map(id => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     const { debt } = useDebt(id)
@@ -170,13 +167,13 @@ function DebtSummaryCard({
   }).filter(d => d && !d.settled)
 
   const totals = useMemo(() => {
-    let owed = 0 // Money owed TO you
-    let owing = 0 // Money you OWE
+    let owed = 0
+    let owing = 0
 
     debts.forEach(debt => {
       if (!debt) return
       const amount = parseFloat(formatEther(debt.amount))
-      
+
       if (debt.creditor.toLowerCase() === userAddress.toLowerCase()) {
         owed += amount
       } else if (debt.debtor.toLowerCase() === userAddress.toLowerCase()) {

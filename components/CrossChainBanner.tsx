@@ -41,7 +41,7 @@ export function CrossChainBanner() {
                     width={20}
                     height={20}
                     className="object-contain"
-                    unoptimized
+                    priority
                   />
                   <span className="text-xs font-medium">{chain.symbol}</span>
                 </div>

@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
@@ -9,6 +10,12 @@ import { SUPPORTED_CHAINS } from '@/lib/chains'
 export function Header() {
   const { isConnected, chain } = useAccount()
   const currentChain = SUPPORTED_CHAINS.find(c => c.id === chain?.id)
+  const [mounted, setMounted] = useState(false)
+
+  // prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -19,9 +26,8 @@ export function Header() {
             <span className="text-xl font-bold text-gray-900">CircleSettle</span>
           </Link>
 
-          {isConnected && (
+          {mounted && isConnected && (
             <nav className="flex items-center space-x-6">
-              {/* Chain indicator */}
               {currentChain && (
                 <div className="flex items-center space-x-2 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-full">
                   <Image
@@ -30,25 +36,32 @@ export function Header() {
                     width={20}
                     height={20}
                     className="object-contain"
-                    unoptimized
+                    priority
                   />
                   <span className="text-sm font-semibold text-blue-700">
                     {currentChain.name}
                   </span>
                 </div>
               )}
-              
-              <Link 
-                href="/dashboard" 
+
+              <Link
+                href="/dashboard"
                 className="text-gray-700 hover:text-gray-900 font-medium transition"
               >
                 Dashboard
               </Link>
-              <Link 
-                href="/split-bill" 
+              <Link
+                href="/split-bill"
                 className="text-gray-700 hover:text-gray-900 font-medium transition"
               >
                 Split Bill
+              </Link>
+              <Link
+                href="/split-bill-ai"
+                className="flex items-center space-x-1 text-purple-700 hover:text-purple-900 font-medium transition"
+              >
+                <span>AI Scanner</span>
+                <span className="text-lg">🤖</span>
               </Link>
             </nav>
           )}

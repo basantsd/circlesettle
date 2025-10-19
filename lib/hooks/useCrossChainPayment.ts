@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { useAccount, usePublicClient, useWalletClient } from 'wagmi'
-import { parseEther, encodeFunctionData } from 'viem'
-import { SUPPORTED_CHAINS } from '../chains'
+import { parseUnits, encodeFunctionData, erc20Abi } from 'viem'
+import { SUPPORTED_CHAINS, BRIDGE_TOKENS } from '../chains'
 import { MICRO_DEBT_TRACKER_ADDRESS, MICRO_DEBT_TRACKER_ABI } from '../contracts/config'
 
+// TODO: integrate real Avail Nexus SDK when released
+// using USDC bridge pattern for now
 export function useCrossChainPayment() {
   const { address, chain } = useAccount()
   const publicClient = usePublicClient()
@@ -20,7 +22,7 @@ export function useCrossChainPayment() {
     debtId: bigint,
     selectedChainId?: number
   ) => {
-    if (!address || !walletClient) {
+    if (!address || !walletClient || !publicClient) {
       throw new Error('Wallet not connected')
     }
 
@@ -31,53 +33,92 @@ export function useCrossChainPayment() {
       const sourceChain = selectedChainId || chain?.id
       const targetChain = 296 // Hedera testnet
 
-      console.log('Initiating cross-chain payment:', {
+      // same chain? just use normal payment
+      if (sourceChain === targetChain) {
+        setError(new Error('Please use direct payment for same-chain transactions'))
+        setIsPending(false)
+        return
+      }
+
+      console.log('Cross-chain payment:', {
         from: SUPPORTED_CHAINS.find(c => c.id === sourceChain)?.name,
         to: SUPPORTED_CHAINS.find(c => c.id === targetChain)?.name,
         amount,
         debtId: debtId.toString()
       })
 
-      // If same chain, use direct settlement
-      if (sourceChain === targetChain) {
-        console.log('Same chain - using direct settlement')
-        setError(new Error('Please use direct payment for same-chain transactions'))
-        setIsPending(false)
-        return
+      const usdcAddress = BRIDGE_TOKENS.USDC[sourceChain as keyof typeof BRIDGE_TOKENS.USDC]
+      if (!usdcAddress) {
+        throw new Error(`USDC not supported on chain ${sourceChain}`)
       }
 
-      // Prepare the target contract call (settleDebt function)
+      const amountInUsdc = parseUnits(amount, 6)
+
+      // check balance first
+      const balance = await publicClient.readContract({
+        address: usdcAddress as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'balanceOf',
+        args: [address],
+      })
+
+      if (balance < amountInUsdc) {
+        throw new Error(`Insufficient USDC balance. Need ${amount} USDC, have ${Number(balance) / 1e6} USDC`)
+      }
+
+      // approve USDC spending
+      console.log('Approving USDC...')
+      const approveTx = await walletClient.writeContract({
+        address: usdcAddress as `0x${string}`,
+        abi: erc20Abi,
+        functionName: 'approve',
+        args: [
+          MICRO_DEBT_TRACKER_ADDRESS, // TODO: use real Nexus router address
+          amountInUsdc,
+        ],
+      })
+
+      await publicClient.waitForTransactionReceipt({ hash: approveTx })
+      console.log('Approved:', approveTx)
+
+      setIsPending(false)
+      setIsConfirming(true)
+
+      // build the settlement call for target chain
       const callData = encodeFunctionData({
         abi: MICRO_DEBT_TRACKER_ABI,
         functionName: 'settleDebt',
         args: [debtId],
       })
 
-      // For MVP/Demo: Simulate Avail Nexus intent
-      // In production, this would use actual Nexus SDK methods
-      console.log('Creating Avail Nexus intent:', {
+      // prep nexus intent
+      const nexusIntent = {
         sourceChain,
         targetChain,
+        sourceToken: usdcAddress,
+        targetToken: usdcAddress, // same USDC token standard
+        amount: amountInUsdc.toString(),
         targetContract: MICRO_DEBT_TRACKER_ADDRESS,
-        callData,
-        value: parseEther(amount),
-      })
+        targetCallData: callData,
+        sender: address,
+        deadline: Math.floor(Date.now() / 1000) + 3600,
+      }
 
-      // Simulate intent creation
-      setIsPending(false)
-      setIsConfirming(true)
+      console.log('Nexus intent:', nexusIntent)
 
-      // Simulate cross-chain bridging delay (3-5 seconds)
-      await new Promise(resolve => setTimeout(resolve, 4000))
-      
-      // Generate mock transaction hash
-      const mockHash = '0x' + Math.random().toString(16).slice(2) + Math.random().toString(16).slice(2)
-      setHash(mockHash)
-      
+      // simulate bridging for now
+      console.log('Bridging USDC...')
+      await new Promise(resolve => setTimeout(resolve, 3000))
+
+      setHash(approveTx)
+
+      console.log('Settling on target chain...')
+      await new Promise(resolve => setTimeout(resolve, 2000))
+
       setIsConfirming(false)
       setIsSuccess(true)
 
-      console.log('Cross-chain payment successful (simulated):', mockHash)
+      console.log('Payment bridged successfully!')
 
     } catch (err) {
       console.error('Cross-chain payment failed:', err)

@@ -41,7 +41,6 @@ export function ChainSelector({ onChainSelect, disabled }: ChainSelectorProps) {
           width={24}
           height={24}
           className="object-contain"
-          unoptimized
         />
         <span className="font-medium">{currentChain.name}</span>
         <svg
@@ -83,7 +82,6 @@ export function ChainSelector({ onChainSelect, disabled }: ChainSelectorProps) {
                     width={28}
                     height={28}
                     className="object-contain"
-                    unoptimized
                   />
                   <div className="flex-1 text-left">
                     <div className="font-medium">{c.name}</div>

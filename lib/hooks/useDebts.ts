@@ -5,7 +5,7 @@ export function useMyDebts() {
   const { address } = useAccount()
 
   // Get array of debt IDs for current user
-  const { data: debtIds, isLoading } = useReadContract({
+  const { data: debtIds, isLoading, refetch } = useReadContract({
     address: MICRO_DEBT_TRACKER_ADDRESS,
     abi: MICRO_DEBT_TRACKER_ABI,
     functionName: 'getMyDebts',
@@ -15,6 +15,7 @@ export function useMyDebts() {
   return {
     debtIds: debtIds as bigint[] | undefined,
     isLoading,
+    refetch,
   }
 }
 
