@@ -1,8 +1,10 @@
 'use client'
 
-import { useMyDebts, useDebt } from '@/lib/hooks/useDebts'
+import { useMyDebts } from '@/lib/hooks/useDebts'
+import { useReadContracts } from 'wagmi'
 import { formatEther } from 'viem'
 import { useMemo } from 'react'
+import { MICRO_DEBT_TRACKER_ABI, MICRO_DEBT_TRACKER_ADDRESS } from '@/lib/contracts/config'
 
 interface PaymentHistoryTimelineProps {
   address: `0x${string}`
@@ -20,16 +22,28 @@ interface TimelineEvent {
 }
 
 export function PaymentHistoryTimeline({ address }: PaymentHistoryTimelineProps) {
-  const { debtIds, isLoading } = useMyDebts()
+  const { debtIds, isLoading: isLoadingIds } = useMyDebts()
+
+  // Fetch all debts in a single call using useReadContracts
+  const { data: debtsData, isLoading: isLoadingDebts } = useReadContracts({
+    contracts: debtIds?.map(debtId => ({
+      address: MICRO_DEBT_TRACKER_ADDRESS,
+      abi: MICRO_DEBT_TRACKER_ABI,
+      functionName: 'getDebt',
+      args: [debtId],
+    })) || [],
+  })
 
   const timeline = useMemo(() => {
-    if (!debtIds || debtIds.length === 0) return []
+    if (!debtIds || !debtsData || debtIds.length === 0) return []
 
     const events: TimelineEvent[] = []
 
-    debtIds.forEach(debtId => {
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const { debt } = useDebt(debtId)
+    debtIds.forEach((debtId, index) => {
+      const debtResult = debtsData[index]
+      if (debtResult?.status !== 'success') return
+
+      const debt = debtResult.result as any
       if (!debt) return
 
       const isCreditor = debt.creditor.toLowerCase() === address.toLowerCase()
@@ -81,7 +95,9 @@ export function PaymentHistoryTimeline({ address }: PaymentHistoryTimelineProps)
 
     // Sort by timestamp (newest first)
     return events.sort((a, b) => Number(b.timestamp - a.timestamp))
-  }, [debtIds, address])
+  }, [debtIds, debtsData, address])
+
+  const isLoading = isLoadingIds || isLoadingDebts
 
   if (isLoading) {
     return (

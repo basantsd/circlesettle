@@ -1,8 +1,8 @@
 'use client'
 
-import { useAccount } from 'wagmi'
+import { useAccount, useReadContracts } from 'wagmi'
 import { redirect } from 'next/navigation'
-import { useMyDebts, useDebt } from '@/lib/hooks/useDebts'
+import { useMyDebts } from '@/lib/hooks/useDebts'
 import { DebtCard } from '@/components/DebtCard'
 import Link from 'next/link'
 import { useEffect, useMemo } from 'react'
@@ -11,6 +11,7 @@ import { CrossChainBanner } from '@/components/CrossChainBanner'
 import { CircleScoreCard } from '@/components/CircleScoreCard'
 import { PaymentHistoryTimeline } from '@/components/PaymentHistoryTimeline'
 import { ScoreTrendGraph } from '@/components/ScoreTrendGraph'
+import { MICRO_DEBT_TRACKER_ABI, MICRO_DEBT_TRACKER_ADDRESS } from '@/lib/contracts/config'
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount()
@@ -165,20 +166,28 @@ function BalanceSummary({
   )
 }
 
-function DebtSummaryCard({ 
-  debtIds, 
-  userAddress, 
-  type 
-}: { 
+function DebtSummaryCard({
+  debtIds,
+  userAddress,
+  type
+}: {
   debtIds: bigint[]
   userAddress: string
   type: 'owed' | 'owing' | 'net'
 }) {
-  const debts = debtIds.map(id => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { debt } = useDebt(id)
-    return debt
-  }).filter(d => d && !d.settled)
+  // Fetch all debts in a single call using useReadContracts
+  const { data: debtsData } = useReadContracts({
+    contracts: debtIds.map(id => ({
+      address: MICRO_DEBT_TRACKER_ADDRESS,
+      abi: MICRO_DEBT_TRACKER_ABI,
+      functionName: 'getDebt',
+      args: [id],
+    })),
+  })
+
+  const debts = debtsData
+    ?.map(result => result.status === 'success' ? result.result as any : null)
+    .filter(d => d && !d.settled) || []
 
   const totals = useMemo(() => {
     let owed = 0

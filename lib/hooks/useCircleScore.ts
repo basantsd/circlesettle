@@ -20,7 +20,7 @@ export function useCircleScore(address?: `0x${string}`) {
     functionName: 'getScore',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && CIRCLE_SCORE_ADDRESS !== '0x0000000000000000000000000000000000000000',
     },
   })
 
@@ -30,7 +30,7 @@ export function useCircleScore(address?: `0x${string}`) {
     functionName: 'getScoreDetails',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && CIRCLE_SCORE_ADDRESS !== '0x0000000000000000000000000000000000000000',
     },
   })
 
@@ -40,7 +40,7 @@ export function useCircleScore(address?: `0x${string}`) {
     functionName: 'calculateBorrowingPower',
     args: address ? [address] : undefined,
     query: {
-      enabled: !!address,
+      enabled: !!address && CIRCLE_SCORE_ADDRESS !== '0x0000000000000000000000000000000000000000',
     },
   })
 
