@@ -8,6 +8,9 @@ import Link from 'next/link'
 import { useEffect, useMemo } from 'react'
 import { formatEther } from 'viem'
 import { CrossChainBanner } from '@/components/CrossChainBanner'
+import { CircleScoreCard } from '@/components/CircleScoreCard'
+import { PaymentHistoryTimeline } from '@/components/PaymentHistoryTimeline'
+import { ScoreTrendGraph } from '@/components/ScoreTrendGraph'
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount()
@@ -60,6 +63,17 @@ export default function DashboardPage() {
         </div>
 
         <CrossChainBanner />
+
+        {/* Circle Score Section */}
+        <div className="grid md:grid-cols-2 gap-6 mb-6">
+          <CircleScoreCard address={address!} />
+          <ScoreTrendGraph address={address!} />
+        </div>
+
+        {/* Payment History Timeline */}
+        <div className="mb-6">
+          <PaymentHistoryTimeline address={address!} />
+        </div>
 
         <BalanceSummary debtIds={debtIds} userAddress={address!} isLoading={isLoading} />
 
