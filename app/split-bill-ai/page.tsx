@@ -47,11 +47,24 @@ export default function SplitBillAIPage() {
   const [selectedCurrency, setSelectedCurrency] = useState('USD')
   const [conversionRate, setConversionRate] = useState(1)
 
+  // Voice input state
+  const [isListening, setIsListening] = useState(false)
+  const [voiceTranscript, setVoiceTranscript] = useState('')
+  const [voiceSupported, setVoiceSupported] = useState(false)
+
   const { addDebt, isPending, isConfirming, isSuccess, error } = useAddDebt()
 
   if (!isConnected) {
     redirect('/')
   }
+
+  // Check voice support on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+      setVoiceSupported(!!SpeechRecognition)
+    }
+  }, [])
 
   useEffect(() => {
     if (isSuccess) {
@@ -130,6 +143,72 @@ export default function SplitBillAIPage() {
     const currency = CURRENCIES.find(c => c.code === currencyCode)
     if (currency) {
       setConversionRate(currency.rate)
+    }
+  }
+
+  const startVoiceRecognition = () => {
+    if (!voiceSupported || !receiptData) return
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
+    const recognition = new SpeechRecognition()
+
+    recognition.lang = 'en-US'
+    recognition.continuous = false
+    recognition.interimResults = false
+
+    recognition.onstart = () => {
+      setIsListening(true)
+      setVoiceTranscript('')
+    }
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript
+      setVoiceTranscript(transcript)
+      parseVoiceCommand(transcript)
+    }
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error)
+      setIsListening(false)
+    }
+
+    recognition.onend = () => {
+      setIsListening(false)
+    }
+
+    recognition.start()
+  }
+
+  const parseVoiceCommand = (transcript: string) => {
+    if (!receiptData) return
+
+    const lowerTranscript = transcript.toLowerCase()
+    const newSelectedItems: number[] = []
+
+    // Parse patterns like "I had item 1, 3, and 5" or "I had the burger"
+    const numberMatches = lowerTranscript.match(/\d+/g)
+
+    if (numberMatches) {
+      // User said item numbers
+      numberMatches.forEach(num => {
+        const index = parseInt(num) - 1 // convert to 0-indexed
+        if (index >= 0 && index < receiptData.items.length) {
+          newSelectedItems.push(index)
+        }
+      })
+      setSelectedItems(newSelectedItems)
+    } else {
+      // Try to match item names
+      receiptData.items.forEach((item, index) => {
+        const itemNameLower = item.name.toLowerCase()
+        if (lowerTranscript.includes(itemNameLower)) {
+          newSelectedItems.push(index)
+        }
+      })
+
+      if (newSelectedItems.length > 0) {
+        setSelectedItems(newSelectedItems)
+      }
     }
   }
 
@@ -271,6 +350,40 @@ export default function SplitBillAIPage() {
                 </div>
               </div>
 
+              {/* Voice Input Section */}
+              {voiceSupported && (
+                <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">🎤</span>
+                      <span className="text-sm font-semibold text-purple-900">Voice Selection</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={startVoiceRecognition}
+                      disabled={isListening}
+                      className={`px-4 py-2 rounded-lg font-medium transition ${
+                        isListening
+                          ? 'bg-red-500 text-white animate-pulse'
+                          : 'bg-purple-600 text-white hover:bg-purple-700'
+                      }`}
+                    >
+                      {isListening ? 'Listening...' : 'Say what you had'}
+                    </button>
+                  </div>
+                  {voiceTranscript && (
+                    <div className="mt-2 p-2 bg-white rounded border border-purple-200">
+                      <p className="text-sm text-gray-700">
+                        <span className="font-semibold">You said:</span> &quot;{voiceTranscript}&quot;
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-xs text-purple-700 mt-2">
+                    Try: &quot;I had items 1 and 3&quot; or &quot;I had the burger and fries&quot;
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {receiptData.items.map((item, index) => (
                   <button
@@ -297,6 +410,9 @@ export default function SplitBillAIPage() {
                               </svg>
                             )}
                           </div>
+                          <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            #{index + 1}
+                          </span>
                           <span className="font-medium">{item.name}</span>
                         </div>
                         <div className="text-sm text-gray-500 mt-1 ml-7">
