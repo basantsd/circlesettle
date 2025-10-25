@@ -5,7 +5,9 @@ import { useAccount } from 'wagmi'
 import { redirect, useRouter } from 'next/navigation'
 import { useAddDebt } from '@/lib/hooks/useAddDebt'
 import Link from 'next/link'
-import { Bot, Camera, Mic, CheckCircle, XCircle, ArrowLeft, Sparkles, Info } from 'lucide-react'
+import { Bot, Camera, Mic, CheckCircle, XCircle, Info } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 interface Person {
   address: string
@@ -61,7 +63,7 @@ export default function SplitBillAIPage() {
   const [voiceTranscript, setVoiceTranscript] = useState('')
   const [voiceSupported, setVoiceSupported] = useState(false)
 
-  const { addDebt, isPending, isConfirming, isSuccess, error } = useAddDebt()
+  const { addDebt, isSuccess, error } = useAddDebt()
 
   if (!isConnected) {
     redirect('/')
@@ -70,6 +72,7 @@ export default function SplitBillAIPage() {
   // Check voice support on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
       setVoiceSupported(!!SpeechRecognition)
     }
@@ -158,6 +161,7 @@ export default function SplitBillAIPage() {
   const startVoiceRecognition = () => {
     if (!voiceSupported || !receiptData) return
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
     const recognition = new SpeechRecognition()
 
@@ -170,12 +174,14 @@ export default function SplitBillAIPage() {
       setVoiceTranscript('')
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript
       setVoiceTranscript(transcript)
       parseVoiceCommand(transcript)
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error)
       setIsListening(false)
@@ -329,6 +335,7 @@ export default function SplitBillAIPage() {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer">
                   {uploadedImage ? (
                     <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={uploadedImage}
                         alt="Receipt"
@@ -661,9 +668,9 @@ export default function SplitBillAIPage() {
                 {Math.abs(calculateRemaining()) > 0.01 && selectedItems.length > 0 && (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
                     <p className="text-sm text-yellow-800">
-                      ⚠️ <strong>Warning:</strong> The amounts don't match your share.
+                      ⚠️ <strong>Warning:</strong> The amounts don&apos;t match your share.
                       {calculateRemaining() > 0.01 && ` You still need to assign $${calculateRemaining().toFixed(2)}.`}
-                      {calculateRemaining() < -0.01 && ` You've assigned $${Math.abs(calculateRemaining()).toFixed(2)} too much.`}
+                      {calculateRemaining() < -0.01 && ` You&apos;ve assigned $${Math.abs(calculateRemaining()).toFixed(2)} too much.`}
                     </p>
                   </div>
                 )}

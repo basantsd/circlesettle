@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 
-export function NavigationLoader() {
+function NavigationLoaderContent() {
   const [loading, setLoading] = useState(false)
   const [progress, setProgress] = useState(0)
   const pathname = usePathname()
@@ -78,5 +78,13 @@ export function NavigationLoader() {
         <div className="fixed inset-0 bg-white/50 backdrop-blur-sm z-40 pointer-events-none transition-opacity duration-200" />
       )}
     </>
+  )
+}
+
+export function NavigationLoader() {
+  return (
+    <Suspense fallback={null}>
+      <NavigationLoaderContent />
+    </Suspense>
   )
 }

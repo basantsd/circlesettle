@@ -7,8 +7,6 @@ import { useMemo, useState } from 'react'
 import { MICRO_DEBT_TRACKER_ABI, MICRO_DEBT_TRACKER_ADDRESS } from '@/lib/contracts/config'
 import {
   DollarSign,
-  CheckCircle,
-  XCircle,
   ExternalLink,
   Filter,
   Search,
@@ -16,7 +14,8 @@ import {
   User,
   TrendingUp,
   TrendingDown,
-  Receipt
+  Receipt,
+  CheckCircle
 } from 'lucide-react'
 
 interface PaymentHistoryTimelineProps {
@@ -66,7 +65,7 @@ export function PaymentHistoryTimeline({ address }: PaymentHistoryTimelineProps)
       const debtResult = debtsData[index]
       if (debtResult?.status !== 'success') return
 
-      const debt = debtResult.result as any
+      const debt = debtResult.result as { creditor: string; debtor: string; amount: bigint; timestamp: bigint; settled: boolean }
       if (!debt) return
 
       const isCreditor = debt.creditor.toLowerCase() === address.toLowerCase()
@@ -245,7 +244,7 @@ export function PaymentHistoryTimeline({ address }: PaymentHistoryTimelineProps)
     })
   }
 
-  const getBlockExplorerLink = (debtId: bigint) => {
+  const getBlockExplorerLink = () => {
     // Hedera Testnet HashScan
     return `https://hashscan.io/testnet/contract/${MICRO_DEBT_TRACKER_ADDRESS}`
   }
@@ -455,7 +454,7 @@ export function PaymentHistoryTimeline({ address }: PaymentHistoryTimelineProps)
 
                           {/* Blockchain Explorer Link */}
                           <a
-                            href={getBlockExplorerLink(event.debtId)}
+                            href={getBlockExplorerLink()}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center space-x-2 text-xs text-blue-600 hover:text-blue-700 font-medium mt-2"
@@ -481,7 +480,7 @@ export function PaymentHistoryTimeline({ address }: PaymentHistoryTimelineProps)
           Showing {filteredTimeline.length} of {timeline.length} transactions
         </p>
         <a
-          href={getBlockExplorerLink(debtIds![0])}
+          href={getBlockExplorerLink()}
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm text-blue-600 hover:text-blue-700 font-medium inline-flex items-center space-x-1"

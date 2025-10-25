@@ -10,6 +10,23 @@ interface ScoreTrendGraphProps {
 export function ScoreTrendGraph({ address }: ScoreTrendGraphProps) {
   const { score, scoreDetails, isLoading } = useCircleScore(address)
 
+  // Constants for calculations
+  const maxScore = 850
+  const minScore = 300
+  const range = maxScore - minScore
+
+  // Helper functions
+  const getYPosition = (scoreValue: number) => {
+    return ((maxScore - scoreValue) / range) * 100
+  }
+
+  const getColorForScore = (scoreValue: number) => {
+    if (scoreValue >= 750) return 'stroke-green-500'
+    if (scoreValue >= 650) return 'stroke-blue-500'
+    if (scoreValue >= 550) return 'stroke-yellow-500'
+    return 'stroke-orange-500'
+  }
+
   // Generate historical data based on current score
   const historicalData = useMemo(() => {
     if (!scoreDetails) return []
@@ -63,6 +80,25 @@ export function ScoreTrendGraph({ address }: ScoreTrendGraphProps) {
     return points
   }, [score, scoreDetails])
 
+  // Create SVG path
+  const pathData = useMemo(() => {
+    if (historicalData.length < 2) return ''
+
+    const points = historicalData.map((point, index) => {
+      const x = (index / (historicalData.length - 1)) * 100
+      const y = getYPosition(point.score)
+      return { x, y, score: point.score }
+    })
+
+    const path = points.map((point, index) => {
+      if (index === 0) return `M ${point.x} ${point.y}`
+      return `L ${point.x} ${point.y}`
+    }).join(' ')
+
+    return path
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historicalData])
+
   if (isLoading) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6 animate-pulse">
@@ -83,39 +119,6 @@ export function ScoreTrendGraph({ address }: ScoreTrendGraphProps) {
       </div>
     )
   }
-
-  const maxScore = 850
-  const minScore = 300
-  const range = maxScore - minScore
-
-  const getYPosition = (score: number) => {
-    return ((maxScore - score) / range) * 100
-  }
-
-  const getColorForScore = (score: number) => {
-    if (score >= 750) return 'stroke-green-500'
-    if (score >= 650) return 'stroke-blue-500'
-    if (score >= 550) return 'stroke-yellow-500'
-    return 'stroke-orange-500'
-  }
-
-  // Create SVG path
-  const pathData = useMemo(() => {
-    if (historicalData.length < 2) return ''
-
-    const points = historicalData.map((point, index) => {
-      const x = (index / (historicalData.length - 1)) * 100
-      const y = getYPosition(point.score)
-      return { x, y, score: point.score }
-    })
-
-    const path = points.map((point, index) => {
-      if (index === 0) return `M ${point.x} ${point.y}`
-      return `L ${point.x} ${point.y}`
-    }).join(' ')
-
-    return path
-  }, [historicalData])
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6">

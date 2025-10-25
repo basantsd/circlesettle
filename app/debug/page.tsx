@@ -3,6 +3,8 @@
 import { useAccount, useReadContract } from 'wagmi'
 import { MICRO_DEBT_TRACKER_ADDRESS, MICRO_DEBT_TRACKER_ABI } from '@/lib/contracts/config'
 
+export const dynamic = 'force-dynamic'
+
 export default function DebugPage() {
   const { address } = useAccount()
 
@@ -56,7 +58,7 @@ export default function DebugPage() {
           <div className="bg-blue-50 rounded-lg p-6">
             <h3 className="font-semibold mb-2">📝 How to test:</h3>
             <ol className="list-decimal list-inside space-y-2 text-sm">
-              <li>If "Total Debts" is 0, contract is working but has no data yet</li>
+              <li>If &quot;Total Debts&quot; is 0, contract is working but has no data yet</li>
               <li>Go to /split-bill and create a debt</li>
               <li>Come back here to see updated data</li>
               <li>Check HashScan for transaction details</li>

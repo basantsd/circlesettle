@@ -19,9 +19,10 @@ import {
   TrendingUp,
   TrendingDown,
   DollarSign,
-  CheckCircle2,
   Wrench
 } from 'lucide-react'
+
+export const dynamic = 'force-dynamic'
 
 export default function DashboardPage() {
   const { address, isConnected } = useAccount()
@@ -192,19 +193,18 @@ function DebtSummaryCard({
 }) {
   // Fetch all debts in a single call using useReadContracts
   const { data: debtsData } = useReadContracts({
-    contracts: debtIds.map(id => ({
+    contracts: debtIds?.map(id => ({
       address: MICRO_DEBT_TRACKER_ADDRESS,
       abi: MICRO_DEBT_TRACKER_ABI,
       functionName: 'getDebt',
       args: [id],
-    })),
+    })) || [],
   })
 
-  const debts = debtsData
-    ?.map(result => result.status === 'success' ? result.result as any : null)
-    .filter(d => d && !d.settled) || []
-
   const totals = useMemo(() => {
+    const debts = debtsData
+      ?.map(result => result.status === 'success' ? result.result as unknown as { creditor: string; debtor: string; amount: bigint; settled: boolean } : null)
+      .filter(d => d && !d.settled) || []
     let owed = 0
     let owing = 0
 
@@ -220,7 +220,7 @@ function DebtSummaryCard({
     })
 
     return { owed, owing, net: owed - owing }
-  }, [debts, userAddress])
+  }, [debtsData, userAddress])
 
   const config = {
     owed: {

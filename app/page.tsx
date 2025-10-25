@@ -6,7 +6,6 @@ import Image from 'next/image'
 import {
   Camera,
   TrendingUp,
-  Shield,
   ArrowRight,
   CheckCircle,
   Sparkles,
@@ -181,7 +180,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Select Your Items</h3>
                 <p className="text-gray-600 mb-6">
-                  Choose the items you had from the scanned receipt. We'll calculate your exact share including tax and tip.
+                  Choose the items you had from the scanned receipt. We&apos;ll calculate your exact share including tax and tip.
                 </p>
                 <div className="relative w-full aspect-square rounded-xl overflow-hidden">
                   <Image

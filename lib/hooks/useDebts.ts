@@ -1,4 +1,4 @@
-import { useAccount, useReadContract, useReadContracts } from 'wagmi'
+import { useAccount, useReadContract } from 'wagmi'
 import { MICRO_DEBT_TRACKER_ADDRESS, MICRO_DEBT_TRACKER_ABI } from '../contracts/config'
 
 export function useMyDebts() {

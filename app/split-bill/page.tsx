@@ -6,6 +6,8 @@ import { redirect, useRouter } from 'next/navigation'
 import { useAddDebt } from '@/lib/hooks/useAddDebt'
 import { CheckCircle, XCircle, Wrench, Info } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 interface Person {
   address: string
   amount: string
@@ -21,7 +23,7 @@ export default function SplitBillPage() {
   const [debtsCreated, setDebtsCreated] = useState(0)
   const [totalDebts, setTotalDebts] = useState(0)
 
-  const { addDebt, isPending, isConfirming, isSuccess, error, hash } = useAddDebt()
+  const { addDebt, isSuccess, error, hash } = useAddDebt()
 
   if (!isConnected) {
     redirect('/')
@@ -125,7 +127,7 @@ export default function SplitBillPage() {
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start space-x-3">
               <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-blue-800">
-                <strong>How it works:</strong> YOU paid the restaurant in cash/card. Now enter each friend's share.
+                <strong>How it works:</strong> YOU paid the restaurant in cash/card. Now enter each friend&apos;s share.
                 They will pay YOU back via crypto (USDC). Each debt is recorded on-chain.
               </div>
             </div>
@@ -351,9 +353,9 @@ export default function SplitBillPage() {
             {calculateRemaining() !== 0 && yourShare && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
                 <p className="text-sm text-yellow-800">
-                  ⚠️ <strong>Warning:</strong> The amounts don't add up correctly.
+                  ⚠️ <strong>Warning:</strong> The amounts don&apos;t add up correctly.
                   {calculateRemaining() > 0 && ` You still need to assign $${calculateRemaining().toFixed(2)}.`}
-                  {calculateRemaining() < 0 && ` You've assigned $${Math.abs(calculateRemaining()).toFixed(2)} too much.`}
+                  {calculateRemaining() < 0 && ` You&apos;ve assigned $${Math.abs(calculateRemaining()).toFixed(2)} too much.`}
                 </p>
               </div>
             )}
