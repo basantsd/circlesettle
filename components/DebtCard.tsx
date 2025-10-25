@@ -7,6 +7,7 @@ import { formatEther } from 'viem'
 import { useState, useEffect } from 'react'
 import { useAccount } from 'wagmi'
 import { ChainSelector } from './ChainSelector'
+import { XCircle, DollarSign, AlertTriangle, Rocket, Lightbulb } from 'lucide-react'
 
 interface DebtCardProps {
   debtId: bigint
@@ -142,8 +143,9 @@ export function DebtCard({ debtId, userAddress }: DebtCardProps) {
           )}
 
           {crossChainError && (
-            <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
-              ❌ {crossChainError.message}
+            <div className="text-xs text-red-600 bg-red-50 p-2 rounded flex items-center space-x-2">
+              <XCircle className="w-4 h-4" />
+              <span>{crossChainError.message}</span>
             </div>
           )}
 
@@ -156,9 +158,19 @@ export function DebtCard({ debtId, userAddress }: DebtCardProps) {
               className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition text-sm font-semibold"
               title={!isOnHedera ? 'Switch to Hedera network' : 'Pay on Hedera'}
             >
-              {anyPending ? 'Check Wallet...' : 
-               anyConfirming ? 'Confirming...' : 
-               isOnHedera ? '💰 Pay on Hedera' : '⚠️ Switch to Hedera'}
+              {anyPending ? 'Check Wallet...' :
+               anyConfirming ? 'Confirming...' :
+               isOnHedera ? (
+                <span className="flex items-center justify-center space-x-2">
+                  <DollarSign className="w-4 h-4" />
+                  <span>Pay on Hedera</span>
+                </span>
+               ) : (
+                <span className="flex items-center justify-center space-x-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  <span>Switch to Hedera</span>
+                </span>
+               )}
             </button>
             
             <button
@@ -199,11 +211,22 @@ export function DebtCard({ debtId, userAddress }: DebtCardProps) {
                 disabled={anyPending || anyConfirming || isOnHedera}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-semibold"
               >
-                {isOnHedera ? '⚠️ Already on Hedera' : '🚀 Bridge & Pay'}
+                {isOnHedera ? (
+                  <span className="flex items-center justify-center space-x-2">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Already on Hedera</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center justify-center space-x-2">
+                    <Rocket className="w-4 h-4" />
+                    <span>Bridge & Pay</span>
+                  </span>
+                )}
               </button>
 
-              <p className="text-xs text-gray-500">
-                💡 Estimated time: 30-60 seconds for cross-chain settlement
+              <p className="text-xs text-gray-500 flex items-center space-x-1">
+                <Lightbulb className="w-3 h-3" />
+                <span>Estimated time: 30-60 seconds for cross-chain settlement</span>
               </p>
             </div>
           )}

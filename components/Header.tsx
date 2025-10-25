@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import { SUPPORTED_CHAINS } from '@/lib/chains'
+import { Bot } from 'lucide-react'
 
 export function Header() {
   const { isConnected, chain } = useAccount()
@@ -22,7 +23,16 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl">🌊</span>
+            <div className="relative w-8 h-8">
+              <Image
+                src="/logo.png"
+                alt="CircleSettle Logo"
+                width={32}
+                height={32}
+                className="rounded-lg object-contain"
+                priority
+              />
+            </div>
             <span className="text-xl font-bold text-gray-900">CircleSettle</span>
           </Link>
 
@@ -60,8 +70,8 @@ export function Header() {
                 href="/split-bill-ai"
                 className="flex items-center space-x-1 text-purple-700 hover:text-purple-900 font-medium transition"
               >
+                <Bot className="w-4 h-4" />
                 <span>AI Scanner</span>
-                <span className="text-lg">🤖</span>
               </Link>
             </nav>
           )}

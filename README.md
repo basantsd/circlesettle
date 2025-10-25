@@ -14,11 +14,11 @@ CircleSettle is a Web3-powered bill-splitting app with AI receipt scanning, voic
 - **Multi-currency support** - USD, INR, EUR, GBP, JPY, AUD, CAD
 - **Powered by ASI:One** - Advanced OCR with AI
 
-### 2. Voice Commands 🎤
-- **Say what you had** - "I had the burger and fries"
-- **Natural language** - Understands item names or numbers
-- **Instant selection** - Auto-calculates your share
-- **Web Speech API** - Works in Chrome, Safari, Edge
+### 2. Multi-Person Bill Splitting 👥
+- **Add multiple friends** - Split with 2, 3, 4+ people
+- **Custom amounts** - Manual entry for each person's share
+- **Auto-fill remaining** - Automatically calculate last person's amount
+- **Smart validation** - Ensures amounts add up correctly
 
 ### 3. Circle Score - On-Chain Credit 💳
 - **Transparent scoring** - 300-850 range (like FICO)
@@ -44,13 +44,15 @@ CircleSettle is a Web3-powered bill-splitting app with AI receipt scanning, voic
 ```
 1. Connect Wallet (RainbowKit)
    ↓
-2. Upload Receipt (AI Scanner)
+2. Choose Split Method:
+   - Manual Split: Enter total bill and friends' shares
+   - AI Scanner: Upload receipt photo
    ↓
-3. Voice Command "I had items 1 and 3"
+3. Add Multiple Friends (4-5+ people)
    ↓
-4. Auto-Calculate Share ($23.50)
+4. Enter Amount Each Friend Owes (or auto-fill remaining)
    ↓
-5. Create Debt On-Chain
+5. Create Debt Records On-Chain
    ↓
 6. Circle Score +5 (both parties)
    ↓
@@ -58,6 +60,19 @@ CircleSettle is a Web3-powered bill-splitting app with AI receipt scanning, voic
    ↓
 8. Build Reputation → Unlock Loans
 ```
+
+---
+
+## 📊 System Diagrams
+
+### System Architecture
+![System Architecture](docs/images/architecture-diagram.png)
+
+### User Flow
+![User Flow](docs/images/user-flow-diagram.png)
+
+### Technical Sequence
+![Technical Sequence](docs/images/technical-sequence-diagram.png)
 
 ---
 
@@ -71,7 +86,7 @@ CircleSettle is a Web3-powered bill-splitting app with AI receipt scanning, voic
 - **TailwindCSS 4** - Utility-first styling
 - **Wagmi** - Ethereum React hooks
 - **RainbowKit** - Beautiful wallet connection
-- **Web Speech API** - Voice recognition
+- **Lucide React** - Professional icon library
 
 **Smart Contracts:**
 - **Solidity 0.8.20** - Smart contract language
@@ -80,8 +95,6 @@ CircleSettle is a Web3-powered bill-splitting app with AI receipt scanning, voic
 
 **AI/ML:**
 - **ASI:One API** - Receipt OCR (primary)
-- **OCR.space** - Fallback OCR service
-- **Web Speech API** - Voice processing
 
 **Blockchain:**
 - **Avail Nexus** - Cross-chain messaging
@@ -102,9 +115,10 @@ circlesettle/
 │   └── api/scan-receipt/route.ts   # OCR API endpoint
 ├── components/
 │   ├── CircleScoreCard.tsx         # Score display
-│   ├── PaymentHistoryTimeline.tsx  # Activity timeline
+│   ├── PaymentHistoryTimeline.tsx  # Activity timeline with filters
 │   ├── ScoreTrendGraph.tsx         # Score visualization
 │   ├── DebtCard.tsx                # Transaction card
+│   ├── Header.tsx                  # Navigation header
 │   └── CrossChainBanner.tsx        # Network selector
 ├── contracts/
 │   ├── src/
@@ -157,9 +171,6 @@ Edit `.env.local` with your keys:
 ```env
 # ASI Alliance API Key
 ASI_ONE_API_KEY=your_asi_api_key
-
-# OCR Space API Key (fallback)
-OCR_SPACE_API_KEY=your_ocr_key
 
 # WalletConnect Project ID
 NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
@@ -226,21 +237,25 @@ NEXT_PUBLIC_DEBT_TRACKER_ADDRESS=0x...
 - Approve connection
 
 ### 2. Split a Bill with AI
-- Navigate to "AI Scanner" 🤖
+- Navigate to "AI Scanner"
 - Upload receipt photo
 - Wait for AI to extract items
-- Click 🎤 "Say what you had"
-- Speak: "I had items 1 and 3"
+- Select the items you had
 - Review your calculated share
-- Enter friend's wallet address
-- Click "Create Debt Record"
-- Approve transaction in wallet
+- Add multiple friends' wallet addresses
+- Enter amount each friend owes (or use auto-fill)
+- Click "Create Debt Records"
+- Approve transactions in wallet
 
 ### 3. View Your Circle Score
 - Dashboard shows your score prominently
 - Hover over stats for tooltips
-- View score trend graph
-- Check payment history timeline
+- View score trend graph (always shows at least 2 points)
+- Check payment history timeline with filters:
+  - Filter by type (All, Bills Split, Paid, Received)
+  - Search by address or amount
+  - Sort by date or amount
+  - Click blockchain explorer links for transaction details
 - See borrowing power
 
 ### 4. Settle a Debt
@@ -350,38 +365,6 @@ Example:
 
 ---
 
-## 🚧 Roadmap
-
-### Phase 1: MVP (Current) ✅
-- [x] AI receipt scanning
-- [x] Voice commands
-- [x] Circle Score system
-- [x] Basic debt tracking
-- [x] Dashboard UI
-
-### Phase 2: Lending (Days 11-12) 🚧
-- [ ] Emergency loan pool contract
-- [ ] Multi-lender pooling
-- [ ] Anonymous loans with Lit Protocol
-- [ ] Repayment schedules
-
-### Phase 3: Polish (Days 13-14) 📅
-- [ ] Comprehensive testing
-- [ ] Mobile optimization
-- [ ] Demo video production
-- [ ] Mainnet deployment
-
-### Phase 4: Future 🔮
-- [ ] Group bill splitting (3+ people)
-- [ ] Recurring payments
-- [ ] Payment reminders
-- [ ] Social features (friend network)
-- [ ] Mobile app (React Native)
-- [ ] Credit score NFTs
-- [ ] DeFi integrations
-
----
-
 ## 🏆 Hackathon Integration
 
 ### Partner Technologies
@@ -455,7 +438,7 @@ This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) 
 
 **Basant Singh**
 
-Built for [Hackathon Name] with ❤️
+Built for ETH Online 2025 with ❤️
 
 ---
 
@@ -471,9 +454,9 @@ Built for [Hackathon Name] with ❤️
 
 ## 📞 Support
 
-- **Issues:** [GitHub Issues](https://github.com/yourusername/circlesettle/issues)
-- **Twitter:** [@yourhandle](https://twitter.com/yourhandle)
-- **Email:** your.email@example.com
+- **Issues:** [GitHub Issues](https://github.com/basantsd/circlesettle/issues)
+- **Linkedin:** [@basantsd](https://www.linkedin.com/in/basantsd/)
+- **Email:** sbasant12345@gmail.com
 
 ---
 
@@ -485,7 +468,7 @@ CircleSettle is a hackathon project and currently in beta. Smart contracts have 
 
 <div align="center">
 
-**[Website](https://circlesettle.com)** • **[Demo Video](https://youtube.com/watch?v=...)** • **[Documentation](./docs)**
+**[Website](https://circlesettle.com)** • **[Demo Video](https://youtube.com/watch?v=...)**
 
 Made with 💫 for the future of trust-based finance
 

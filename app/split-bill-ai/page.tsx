@@ -5,6 +5,12 @@ import { useAccount } from 'wagmi'
 import { redirect, useRouter } from 'next/navigation'
 import { useAddDebt } from '@/lib/hooks/useAddDebt'
 import Link from 'next/link'
+import { Bot, Camera, Mic, CheckCircle, XCircle, ArrowLeft, Sparkles, Info } from 'lucide-react'
+
+interface Person {
+  address: string
+  amount: string
+}
 
 interface ReceiptItem {
   name: string
@@ -38,7 +44,10 @@ const CURRENCIES = [
 export default function SplitBillAIPage() {
   const { address, isConnected } = useAccount()
   const router = useRouter()
-  const [friendAddress, setFriendAddress] = useState('')
+  const [people, setPeople] = useState<Person[]>([{ address: '', amount: '' }])
+  const [creatingDebts, setCreatingDebts] = useState(false)
+  const [debtsCreated, setDebtsCreated] = useState(0)
+  const [totalDebts, setTotalDebts] = useState(0)
 
   const [isScanning, setIsScanning] = useState(false)
   const [receiptData, setReceiptData] = useState<ReceiptData | null>(null)
@@ -212,17 +221,80 @@ export default function SplitBillAIPage() {
     }
   }
 
+  const addPerson = () => {
+    setPeople([...people, { address: '', amount: '' }])
+  }
+
+  const removePerson = (index: number) => {
+    if (people.length > 1) {
+      setPeople(people.filter((_, i) => i !== index))
+    }
+  }
+
+  const updatePersonAddress = (index: number, value: string) => {
+    const newPeople = [...people]
+    newPeople[index].address = value
+    setPeople(newPeople)
+  }
+
+  const updatePersonAmount = (index: number, value: string) => {
+    const newPeople = [...people]
+    newPeople[index].amount = value
+    setPeople(newPeople)
+  }
+
+  const calculateTotalOwed = () => {
+    return people.reduce((sum, person) => {
+      const amount = parseFloat(person.amount) || 0
+      return sum + amount
+    }, 0)
+  }
+
+  const calculateRemaining = () => {
+    const myShare = calculateMyShare()
+    const myShareUSD = convertAmount(myShare)
+    const assigned = calculateTotalOwed()
+    return myShareUSD - assigned
+  }
+
+  const autoFillLastPerson = () => {
+    if (people.length > 0) {
+      const remaining = calculateRemaining()
+      if (remaining > 0) {
+        const lastIndex = people.length - 1
+        updatePersonAmount(lastIndex, remaining.toFixed(2))
+      }
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!address) return
 
+    const validPeople = people.filter(p => p.address.trim() !== '' && parseFloat(p.amount) > 0)
+    if (validPeople.length === 0) return
+
+    setCreatingDebts(true)
+    setDebtsCreated(0)
+    setTotalDebts(validPeople.length)
+
     try {
-      const myShare = calculateMyShare()
-      const myShareUSD = convertAmount(myShare) // convert to USD for on-chain
-      await addDebt(friendAddress, address, myShareUSD.toFixed(2))
+      for (let i = 0; i < validPeople.length; i++) {
+        await addDebt(validPeople[i].address, address, validPeople[i].amount)
+        setDebtsCreated(i + 1)
+      }
     } catch (err) {
-      console.error('Failed to create debt:', err)
+      console.error('Failed to create debts:', err)
+    } finally {
+      setCreatingDebts(false)
     }
+  }
+
+  const getRemainingColor = () => {
+    const remaining = calculateRemaining()
+    if (remaining < -0.01) return 'text-red-600'
+    if (remaining > 0.01) return 'text-yellow-600'
+    return 'text-green-600'
   }
 
   return (
@@ -238,7 +310,7 @@ export default function SplitBillAIPage() {
             <p className="text-gray-600 mt-1">Upload a receipt and select your items</p>
           </div>
           <div className="flex items-center space-x-2 px-4 py-2 bg-purple-100 rounded-lg">
-            <span className="text-2xl">🤖</span>
+            <Bot className="w-8 h-8 text-purple-600" />
             <div>
               <div className="text-xs text-purple-700 font-semibold">Powered by</div>
               <div className="text-sm font-bold text-purple-900">ASI Alliance</div>
@@ -273,7 +345,7 @@ export default function SplitBillAIPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="text-6xl mb-4">📷</div>
+                      <Camera className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                       <p className="text-gray-600 mb-2">Click to upload receipt</p>
                       <p className="text-sm text-gray-400">or drag and drop</p>
                     </>
@@ -306,23 +378,85 @@ export default function SplitBillAIPage() {
               )}
             </div>
 
-            {/* Friend's Address */}
+            {/* Friends Who Owe You */}
             {receiptData && (
               <div className="bg-white rounded-lg shadow-lg p-6">
-                <h2 className="text-xl font-semibold mb-4">2. Who Paid?</h2>
-                <label className="block">
-                  <span className="text-sm font-medium text-gray-700 mb-2 block">
-                    Friend's Wallet Address
-                  </span>
-                  <input
-                    type="text"
-                    value={friendAddress}
-                    onChange={(e) => setFriendAddress(e.target.value)}
-                    placeholder="0x..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                </label>
+                {/* Info Banner */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start space-x-2 mb-4">
+                  <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-xs text-blue-800">
+                    <strong>You paid the restaurant.</strong> Enter how much each friend owes you based on what they ate.
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">2. Who Owes You Money?</h2>
+                  <button
+                    type="button"
+                    onClick={addPerson}
+                    className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 transition"
+                  >
+                    + Add Person
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {people.map((person, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <div className="flex-1 space-y-2">
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Person {index + 1} - Wallet Address
+                            </label>
+                            <input
+                              type="text"
+                              value={person.address}
+                              onChange={(e) => updatePersonAddress(index, e.target.value)}
+                              placeholder="0x..."
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 mb-1">
+                              Amount They Owe You ($)
+                            </label>
+                            <div className="flex gap-2">
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={person.amount}
+                                onChange={(e) => updatePersonAmount(index, e.target.value)}
+                                placeholder="25.00"
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                required
+                              />
+                              {index === people.length - 1 && calculateRemaining() > 0.01 && (
+                                <button
+                                  type="button"
+                                  onClick={autoFillLastPerson}
+                                  className="px-3 py-2 bg-green-100 text-green-700 text-xs rounded hover:bg-green-200 transition whitespace-nowrap"
+                                >
+                                  Auto-fill
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {people.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => removePerson(index)}
+                            className="px-2 py-1 text-red-600 hover:bg-red-50 rounded transition mt-4"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
@@ -355,7 +489,7 @@ export default function SplitBillAIPage() {
                 <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border border-purple-200">
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center space-x-2">
-                      <span className="text-lg">🎤</span>
+                      <Mic className="w-5 h-5 text-purple-600" />
                       <span className="text-sm font-semibold text-purple-900">Voice Selection</span>
                     </div>
                     <button
@@ -451,44 +585,88 @@ export default function SplitBillAIPage() {
                     <span className="font-medium">${convertAmount(calculateMyShare()).toFixed(2)}</span>
                   </div>
                 )}
+
+                {/* Split breakdown */}
+                {people.filter(p => p.address.trim()).length > 0 && (
+                  <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm font-semibold text-blue-900 mb-2">Payment Breakdown:</p>
+                    <div className="text-xs text-blue-800 space-y-1">
+                      <div className="flex justify-between">
+                        <span>Your total share (USD):</span>
+                        <span className="font-semibold">${convertAmount(calculateMyShare()).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total assigned to friends:</span>
+                        <span className="font-semibold">${calculateTotalOwed().toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between font-semibold pt-1 border-t border-blue-300">
+                        <span>Remaining to assign:</span>
+                        <span className={getRemainingColor()}>
+                          ${Math.abs(calculateRemaining()).toFixed(2)}
+                          {calculateRemaining() < -0.01 && ' (over)'}
+                          {calculateRemaining() > 0.01 && ' (under)'}
+                          {Math.abs(calculateRemaining()) <= 0.01 && ' ✓'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Submit */}
               <form onSubmit={handleSubmit} className="mt-6">
-                {isPending && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-3">
-                    <p className="text-sm text-yellow-800">⏳ Check your wallet...</p>
-                  </div>
-                )}
-
-                {isConfirming && (
+                {creatingDebts && (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
-                    <p className="text-sm text-blue-800">⏳ Confirming transaction...</p>
+                    <p className="text-sm text-blue-800">
+                      Creating debts... {debtsCreated}/{totalDebts}
+                    </p>
+                    <div className="mt-2 bg-white rounded-full h-2">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${(debtsCreated / totalDebts) * 100}%` }}
+                      ></div>
+                    </div>
                   </div>
                 )}
 
-                {isSuccess && (
+                {!creatingDebts && isSuccess && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                    <p className="text-sm text-green-800">✅ Debt created! Redirecting...</p>
+                    <p className="text-sm text-green-800 flex items-center space-x-2">
+                      <CheckCircle className="w-4 h-4" />
+                      <span>All debts created! Redirecting...</span>
+                    </p>
                   </div>
                 )}
 
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
-                    <p className="text-sm text-red-800">❌ {error.message}</p>
+                    <p className="text-sm text-red-800 flex items-center space-x-2">
+                      <XCircle className="w-4 h-4" />
+                      <span>{error.message}</span>
+                    </p>
                   </div>
                 )}
 
                 <button
                   type="submit"
-                  disabled={!friendAddress || selectedItems.length === 0 || isPending || isConfirming}
+                  disabled={people.filter(p => p.address.trim() && parseFloat(p.amount) > 0).length === 0 || selectedItems.length === 0 || creatingDebts}
                   className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
                 >
-                  {isPending ? 'Check Wallet...' :
-                   isConfirming ? 'Confirming...' :
+                  {creatingDebts ? `Creating ${debtsCreated}/${totalDebts}...` :
                    isSuccess ? 'Success! ✓' :
-                   'Create Debt Record'}
+                   'Create Debt Records'}
                 </button>
+
+                {/* Warning if amounts don't match */}
+                {Math.abs(calculateRemaining()) > 0.01 && selectedItems.length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-3">
+                    <p className="text-sm text-yellow-800">
+                      ⚠️ <strong>Warning:</strong> The amounts don't match your share.
+                      {calculateRemaining() > 0.01 && ` You still need to assign $${calculateRemaining().toFixed(2)}.`}
+                      {calculateRemaining() < -0.01 && ` You've assigned $${Math.abs(calculateRemaining()).toFixed(2)} too much.`}
+                    </p>
+                  </div>
+                )}
               </form>
             </div>
           )}
@@ -496,7 +674,7 @@ export default function SplitBillAIPage() {
           {/* Empty State */}
           {!receiptData && !isScanning && (
             <div className="bg-white rounded-lg shadow-lg p-12 flex flex-col items-center justify-center text-center">
-              <div className="text-6xl mb-4">🤖</div>
+              <Bot className="w-20 h-20 text-purple-600 mb-4" />
               <h3 className="text-xl font-semibold mb-2">AI-Powered Split</h3>
               <p className="text-gray-600 mb-4">
                 Upload a receipt and our AI will automatically extract all items and prices

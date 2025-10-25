@@ -10,54 +10,55 @@ interface ScoreTrendGraphProps {
 export function ScoreTrendGraph({ address }: ScoreTrendGraphProps) {
   const { score, scoreDetails, isLoading } = useCircleScore(address)
 
-  // Generate mock historical data based on current score
+  // Generate historical data based on current score
   const historicalData = useMemo(() => {
     if (!scoreDetails) return []
 
     const points: { score: number; label: string }[] = []
-    const activities = Number(scoreDetails.billsSplit) + Number(scoreDetails.onTimePayments) + Number(scoreDetails.loansRepaid)
-
-    if (activities === 0) {
-      // New user - show projected growth
-      return [
-        { score: 500, label: 'Start' },
-        { score: 500, label: 'Now' },
-      ]
-    }
-
-    // Calculate historical points (working backwards)
-    let currentScore = score
     const billSplits = Number(scoreDetails.billsSplit)
     const onTimePayments = Number(scoreDetails.onTimePayments)
     const latePayments = Number(scoreDetails.latePayments)
     const loansRepaid = Number(scoreDetails.loansRepaid)
+    const activities = billSplits + onTimePayments + loansRepaid + latePayments
 
-    // Starting point
-    points.unshift({ score: 500, label: 'Start' })
+    // Always start from 500
+    points.push({ score: 500, label: 'Start' })
 
-    // Add points for each activity (simplified simulation)
+    if (activities === 0) {
+      // New user - show current score (should be 500)
+      points.push({ score: score, label: 'Now' })
+      return points
+    }
+
+    // Build up the timeline step by step
+    let runningScore = 500
+
+    // Add bill splits
     if (billSplits > 0) {
-      const prevScore = points[points.length - 1].score
-      points.push({ score: prevScore + billSplits * 5, label: `${billSplits} splits` })
+      runningScore += billSplits * 5
+      points.push({ score: runningScore, label: `After ${billSplits} bill${billSplits > 1 ? 's' : ''}` })
     }
 
+    // Add on-time payments
     if (onTimePayments > 0) {
-      const prevScore = points[points.length - 1].score
-      points.push({ score: prevScore + onTimePayments * 10, label: `${onTimePayments} on-time` })
+      runningScore += onTimePayments * 10
+      points.push({ score: runningScore, label: `+${onTimePayments} on-time` })
     }
 
+    // Subtract late payments
     if (latePayments > 0) {
-      const prevScore = points[points.length - 1].score
-      points.push({ score: Math.max(300, prevScore - latePayments * 50), label: `${latePayments} late` })
+      runningScore = Math.max(300, runningScore - latePayments * 50)
+      points.push({ score: runningScore, label: `-${latePayments} late` })
     }
 
+    // Add loans repaid
     if (loansRepaid > 0) {
-      const prevScore = points[points.length - 1].score
-      points.push({ score: Math.min(850, prevScore + loansRepaid * 50), label: `${loansRepaid} loans` })
+      runningScore = Math.min(850, runningScore + loansRepaid * 50)
+      points.push({ score: runningScore, label: `+${loansRepaid} loan${loansRepaid > 1 ? 's' : ''}` })
     }
 
-    // Current score
-    points.push({ score: currentScore, label: 'Now' })
+    // Current score (should match the calculated score)
+    points.push({ score: score, label: 'Now' })
 
     return points
   }, [score, scoreDetails])
@@ -71,14 +72,13 @@ export function ScoreTrendGraph({ address }: ScoreTrendGraphProps) {
     )
   }
 
-  if (historicalData.length < 2) {
+  if (!scoreDetails || historicalData.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-xl font-semibold mb-4">Score Trend</h3>
         <div className="text-center py-8 text-gray-500">
           <div className="text-4xl mb-2">📈</div>
-          <p>Not enough data yet</p>
-          <p className="text-sm mt-1">Complete more activities to see your trend</p>
+          <p>Loading score data...</p>
         </div>
       </div>
     )

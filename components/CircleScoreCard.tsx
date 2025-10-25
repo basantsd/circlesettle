@@ -2,6 +2,7 @@
 
 import { useCircleScore } from '@/lib/hooks/useCircleScore'
 import { useState } from 'react'
+import { Sparkles, DollarSign, Info, HelpCircle } from 'lucide-react'
 
 interface CircleScoreCardProps {
   address: `0x${string}`
@@ -69,7 +70,7 @@ export function CircleScoreCard({ address }: CircleScoreCardProps) {
           <h3 className="text-sm font-semibold text-purple-200 uppercase tracking-wide">Circle Score</h3>
           <p className="text-xs text-purple-200/70 mt-1">Your on-chain credit reputation</p>
         </div>
-        <div className="text-4xl">💫</div>
+        <Sparkles className="w-10 h-10 text-purple-200" />
       </div>
 
       <div className="mb-6">
@@ -110,8 +111,9 @@ export function CircleScoreCard({ address }: CircleScoreCardProps) {
       <Tooltip content="Based on your Circle Score, this is the maximum you can borrow">
         <div className="bg-white/10 backdrop-blur rounded-lg p-4 mb-4 hover:bg-white/15 transition cursor-help">
           <div className="text-sm text-purple-200 mb-1 flex items-center space-x-1">
+            <DollarSign className="w-4 h-4" />
             <span>Borrowing Power</span>
-            <span className="text-[10px]">ⓘ</span>
+            <HelpCircle className="w-3 h-3" />
           </div>
           <div className="text-3xl font-bold transition-all duration-300 hover:scale-105">
             ${borrowingPower.toLocaleString('en-US', { maximumFractionDigits: 0 })}
@@ -129,7 +131,7 @@ export function CircleScoreCard({ address }: CircleScoreCardProps) {
             <div className="bg-white/10 backdrop-blur rounded-lg p-3 hover:bg-white/20 transition cursor-help">
               <div className="text-xs text-purple-200/70 flex items-center space-x-1">
                 <span>Bills Split</span>
-                <span className="text-[10px]">ⓘ</span>
+                <HelpCircle className="w-3 h-3" />
               </div>
               <div className="text-2xl font-bold">{Number(scoreDetails.billsSplit)}</div>
               <div className="text-xs text-green-300">+{Number(scoreDetails.billsSplit) * 5} pts</div>
@@ -139,7 +141,7 @@ export function CircleScoreCard({ address }: CircleScoreCardProps) {
             <div className="bg-white/10 backdrop-blur rounded-lg p-3 hover:bg-white/20 transition cursor-help">
               <div className="text-xs text-purple-200/70 flex items-center space-x-1">
                 <span>On-Time Payments</span>
-                <span className="text-[10px]">ⓘ</span>
+                <HelpCircle className="w-3 h-3" />
               </div>
               <div className="text-2xl font-bold">{Number(scoreDetails.onTimePayments)}</div>
               <div className="text-xs text-green-300">+{Number(scoreDetails.onTimePayments) * 10} pts</div>
@@ -149,7 +151,7 @@ export function CircleScoreCard({ address }: CircleScoreCardProps) {
             <div className="bg-white/10 backdrop-blur rounded-lg p-3 hover:bg-white/20 transition cursor-help">
               <div className="text-xs text-purple-200/70 flex items-center space-x-1">
                 <span>Loans Repaid</span>
-                <span className="text-[10px]">ⓘ</span>
+                <HelpCircle className="w-3 h-3" />
               </div>
               <div className="text-2xl font-bold">{Number(scoreDetails.loansRepaid)}</div>
               <div className="text-xs text-green-300">+{Number(scoreDetails.loansRepaid) * 50} pts</div>
@@ -159,7 +161,7 @@ export function CircleScoreCard({ address }: CircleScoreCardProps) {
             <div className="bg-white/10 backdrop-blur rounded-lg p-3 hover:bg-white/20 transition cursor-help">
               <div className="text-xs text-purple-200/70 flex items-center space-x-1">
                 <span>Late Payments</span>
-                <span className="text-[10px]">ⓘ</span>
+                <HelpCircle className="w-3 h-3" />
               </div>
               <div className="text-2xl font-bold text-orange-300">{Number(scoreDetails.latePayments)}</div>
               <div className="text-xs text-orange-300">{Number(scoreDetails.latePayments) * 50} pts</div>
@@ -171,7 +173,7 @@ export function CircleScoreCard({ address }: CircleScoreCardProps) {
       {/* Info Banner */}
       <div className="mt-4 bg-white/5 backdrop-blur border border-white/10 rounded-lg p-3">
         <div className="flex items-start space-x-2">
-          <span className="text-lg">ℹ️</span>
+          <Info className="w-5 h-5 text-purple-200 flex-shrink-0" />
           <div className="text-xs text-purple-200/80">
             <strong>How to improve:</strong> Split bills (+5), pay on-time (+10), repay loans (+50).
             Avoid late payments (-50).
