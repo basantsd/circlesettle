@@ -169,15 +169,14 @@ cp .env.example .env.local
 
 Edit `.env.local` with your keys:
 ```env
-# ASI Alliance API Key
-ASI_ONE_API_KEY=your_asi_api_key
+HEDERA_ACCOUNT_ID=0.0.7xxxxxx
+HEDERA_PRIVATE_KEY=0x0000000000000000000000000000000000000000
+NEXT_PUBLIC_HEDERA_TESTNET_RPC=https://testnet.hashio.io/api
+WALLETCONNECT_PROJECT_ID=your_project_id_here
+NODE_ENV="development"
+NEXT_PUBLIC_USE_TESTNET=true
+ASI_ONE_API_KEY=sk_40000000000000000000000000000000000000000
 
-# WalletConnect Project ID
-NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=your_project_id
-
-# Contract Addresses (after deployment)
-NEXT_PUBLIC_DEBT_TRACKER_ADDRESS=0x...
-NEXT_PUBLIC_CIRCLE_SCORE_ADDRESS=0x...
 ```
 
 4. **Run development server**
